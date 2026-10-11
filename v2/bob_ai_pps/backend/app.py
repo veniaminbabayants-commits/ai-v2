@@ -204,7 +204,7 @@ def ask_openai(question: str, context: list[str]):
             detail="Не задан YANDEX_FOLDER_ID (ID каталога Yandex Cloud)."
         )
 
-    context_text = "\\n\\n---\\n\\n".join(context) if context else (
+    context_text = "\n\n---\n\n".join(context) if context else (
         "Подходящие фрагменты из добавленных источников не найдены."
     )
     instructions = """
@@ -227,8 +227,8 @@ def ask_openai(question: str, context: list[str]):
             {
                 "role": "user",
                 "content": (
-                    f"Вопрос игрока:\\n{question}\\n\\n"
-                    f"Фрагменты базы знаний:\\n{context_text}"
+                    f"Вопрос игрока:\n{question}\n\n"
+                    f"Фрагменты базы знаний:\n{context_text}"
                 ),
             },
         ],
@@ -276,7 +276,7 @@ def ask_openai(question: str, context: list[str]):
         )
 
     if isinstance(answer, list):
-        answer = "\\n".join(
+        answer = "\n".join(
             block.get("text", "")
             for block in answer
             if isinstance(block, dict) and block.get("type") == "text"
