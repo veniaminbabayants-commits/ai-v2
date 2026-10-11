@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private const uint VK_F10 = 0x79;
     private HwndSource? _source;
     private bool _busy;
+    private string _mode = "server";
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -30,11 +31,13 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        AddMessage("TYLER-AI", "Привет! Выбери сервер, организацию и сферу. Я буду искать ответы только в подходящих материалах базы знаний и указывать ссылки на источники.", false);
-        ServerBox.ItemsSource = new[] { "Все", "RED", "YELLOW", "GREEN", "BLUE", "PURPLE" };
+        AddMessage("TYLER-AI", "Привет! Выбери сервер и категорию либо открой отдельный раздел «Правила проекта». В серверном режиме я не смешиваю материалы разных серверов.", false);
+        ServerBox.ItemsSource = new[] { "RED", "YELLOW", "GREEN", "AZURE", "SILVER", "ROSE", "BLACK", "SKY", "TITAN", "FIRE", "LIME", "X" };
         OrganizationBox.ItemsSource = new[] { "Все организации", "Общее", "ППС", "ГИБДД", "Армия", "МЧС", "Правительство", "Администрация" };
-        SphereBox.ItemsSource = new[] { "Все сферы", "Правила проекта", "Организации и уставы", "Администрация и контакты" };
-        ServerBox.SelectedIndex = OrganizationBox.SelectedIndex = SphereBox.SelectedIndex = 0;
+        SphereBox.ItemsSource = new[] { "Все категории", "Гос. организации", "Криминал", "ТРК", "Информация сервера" };
+        ServerBox.SelectedIndex = 0;
+        OrganizationBox.SelectedIndex = 0;
+        SphereBox.SelectedIndex = 0;
     }
 
     private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -110,9 +113,10 @@ public partial class MainWindow : Window
         {
             using var response = await Http.PostAsJsonAsync($"{ApiBase}/chat", new {
                 message = question,
-                server = ServerBox.SelectedItem?.ToString() ?? "Все",
+                mode = _mode,
+                server = ServerBox.SelectedItem?.ToString() ?? "RED",
                 organization = OrganizationBox.SelectedItem?.ToString() ?? "Все организации",
-                sphere = SphereBox.SelectedItem?.ToString() ?? "Все сферы"
+                sphere = SphereBox.SelectedItem?.ToString() ?? "Все категории"
             });
             var json = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
@@ -210,6 +214,40 @@ public partial class MainWindow : Window
                 // Перетаскивание могло завершиться раньше времени.
             }
         }
+    }
+
+    private void ServerMode_Click(object sender, RoutedEventArgs e)
+    {
+        _mode = "server";
+        ServerBox.IsEnabled = true;
+        OrganizationBox.IsEnabled = true;
+        SphereBox.IsEnabled = true;
+        ServerBox.Visibility = Visibility.Visible;
+        OrganizationBox.Visibility = Visibility.Visible;
+        SphereBox.Visibility = Visibility.Visible;
+        ServerLabel.Visibility = Visibility.Visible;
+        OrganizationLabel.Visibility = Visibility.Visible;
+        SphereLabel.Visibility = Visibility.Visible;
+        RulesHint.Visibility = Visibility.Collapsed;
+        ModeStatus.Text = "Режим: выбранный сервер";
+        StatusText.Text = "Вопросы ищутся только в материалах выбранного сервера";
+    }
+
+    private void RulesMode_Click(object sender, RoutedEventArgs e)
+    {
+        _mode = "rules";
+        ServerBox.IsEnabled = false;
+        OrganizationBox.IsEnabled = false;
+        SphereBox.IsEnabled = false;
+        ServerBox.Visibility = Visibility.Collapsed;
+        OrganizationBox.Visibility = Visibility.Collapsed;
+        SphereBox.Visibility = Visibility.Collapsed;
+        ServerLabel.Visibility = Visibility.Collapsed;
+        OrganizationLabel.Visibility = Visibility.Collapsed;
+        SphereLabel.Visibility = Visibility.Collapsed;
+        RulesHint.Visibility = Visibility.Visible;
+        ModeStatus.Text = "Режим: общие правила проекта";
+        StatusText.Text = "Ищу только глобальные правила проекта";
     }
 
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
