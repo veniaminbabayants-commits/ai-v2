@@ -1,0 +1,89 @@
+﻿<Window x:Class="BobAiOverlay.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TYLER-AI Справочник Amazing Online ©veny_b"
+        Width="470" Height="700" MinWidth="380" MinHeight="500"
+        WindowStyle="None" ResizeMode="CanResizeWithGrip"
+        AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="True"
+        WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded" Closing="Window_Closing">
+  <Border Background="#F20B1016" BorderBrush="#FF2D4854" BorderThickness="1"
+          CornerRadius="18" Padding="14">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+
+      <Grid Grid.Row="0" Margin="2,0,2,12" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Border Width="38" Height="38" CornerRadius="12" Background="#FF174A46" VerticalAlignment="Center">
+          <TextBlock Text="AI" Foreground="#FF76F2D9" FontWeight="Bold" FontSize="17"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+        <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+          <TextBlock Text="TYLER-AI" Foreground="{StaticResource TextMain}" FontSize="16" FontWeight="SemiBold"/>
+          <TextBlock Text="Справочник Amazing Online ©veny_b" Foreground="{StaticResource TextMuted}" FontSize="11"/>
+        </StackPanel>
+        <Button Grid.Column="2" Content="—" Click="Minimize_Click" Width="30" Height="30"
+                Background="#FF202A33" Foreground="White" BorderThickness="0" Margin="0,0,6,0"/>
+        <Button Grid.Column="3" Content="×" Click="Close_Click" Width="30" Height="30"
+                Background="#FF202A33" Foreground="White" BorderThickness="0"/>
+      </Grid>
+
+      <Border Grid.Row="1" Background="#FF111C24" CornerRadius="10" Padding="10" Margin="0,0,0,10">
+        <DockPanel>
+          <Ellipse Width="8" Height="8" Fill="#FF43D6A3" Margin="0,0,8,0" VerticalAlignment="Center"/>
+          <TextBlock x:Name="StatusText" Text="Подключение к локальному серверу…" Foreground="{StaticResource TextMuted}" FontSize="11"/>
+          <TextBlock DockPanel.Dock="Right" Text="F10 · показать/скрыть" Foreground="#FF71838F" FontSize="10"/>
+        </DockPanel>
+      </Border>
+
+      <Border Grid.Row="2" Background="#FF111C24" CornerRadius="10" Padding="8" Margin="0,0,0,8">
+        <StackPanel>
+          <TextBlock Text="Сервер" Foreground="{StaticResource TextMuted}" FontSize="10"/>
+          <ComboBox x:Name="ServerBox" SelectedIndex="0" Margin="0,2,0,6"/>
+          <TextBlock Text="Организация" Foreground="{StaticResource TextMuted}" FontSize="10"/>
+          <ComboBox x:Name="OrganizationBox" SelectedIndex="0" Margin="0,2,0,6"/>
+          <TextBlock Text="Сфера" Foreground="{StaticResource TextMuted}" FontSize="10"/>
+          <ComboBox x:Name="SphereBox" SelectedIndex="0" Margin="0,2,0,0"/>
+        </StackPanel>
+      </Border>
+
+      <ScrollViewer Grid.Row="3" x:Name="ChatScroll" VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="Messages" />
+      </ScrollViewer>
+
+      <Border Grid.Row="4" Background="#FF111820" CornerRadius="12" Padding="8" Margin="0,10,0,8">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <TextBox x:Name="QuestionBox" AcceptsReturn="True" TextWrapping="Wrap"
+                   MinHeight="44" MaxHeight="120" VerticalContentAlignment="Center"
+                   Background="Transparent" Foreground="#FFF1F6F8" CaretBrush="#FF39C6B0"
+                   BorderThickness="0" FontSize="13" Padding="6"
+                   KeyDown="QuestionBox_KeyDown"
+                   ToolTip="Напиши RP-вопрос и нажми Enter"/>
+          <Button Grid.Column="1" Content="Отправить" Click="Send_Click"
+                  Background="#FF1D806F" Foreground="White" BorderThickness="0"
+                  Padding="12,8" Margin="6,0,0,0" VerticalAlignment="Center"/>
+        </Grid>
+      </Border>
+
+      <TextBlock Grid.Row="5" Text="ИИ может ошибаться. Проверяй статьи и важные решения по первоисточнику."
+                 Foreground="#FF7F909C" FontSize="10" TextWrapping="Wrap" Margin="4,0,4,0"/>
+    </Grid>
+  </Border>
+</Window>
