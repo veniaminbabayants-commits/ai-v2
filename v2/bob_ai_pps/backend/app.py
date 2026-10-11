@@ -65,8 +65,9 @@ def startup():
     init_db()
 
 
-SERVERS = ["Все", "RED", "YELLOW", "GREEN", "BLUE", "PURPLE"]
-SPHERES = ["Правила проекта", "Организации и уставы", "Администрация и контакты"]
+SERVERS = ["RED", "YELLOW", "GREEN", "AZURE", "SILVER", "ROSE", "BLACK", "SKY", "TITAN", "FIRE", "LIME", "X"]
+SERVER_CATEGORIES = ["Гос. организации", "Криминал", "ТРК", "Информация сервера"]
+SPHERES = ["Правила проекта", *SERVER_CATEGORIES]
 
 class AddSourceRequest(BaseModel):
     url: str = Field(min_length=8, max_length=2048)
@@ -77,9 +78,10 @@ class AddSourceRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=5000)
-    server: str = Field(default="Все", max_length=40)
+    mode: str = Field(default="server", max_length=20)
+    server: str = Field(default="RED", max_length=40)
     organization: str = Field(default="Все организации", max_length=100)
-    sphere: str = Field(default="Все сферы", max_length=80)
+    sphere: str = Field(default="Все категории", max_length=80)
 
 
 def split_text(text: str, size: int = 1200, overlap: int = 180):
@@ -137,7 +139,7 @@ def tokenize(text: str):
     return set(re.findall(r"[a-zа-яё0-9_]{2,}", text.lower()))
 
 
-def find_context(question: str, server: str = "Все", organization: str = "Все организации", sphere: str = "Все сферы", limit: int = 7):
+def find_context(question: str, server: str = "RED", organization: str = "Все организации", sphere: str = "Все категории", mode: str = "server", limit: int = 7):
     qtokens = tokenize(question)
     if not qtokens:
         return []
@@ -147,10 +149,19 @@ def find_context(question: str, server: str = "Все", organization: str = "В�
                    sources.server, sources.organization, sources.sphere
             FROM chunks JOIN sources ON sources.id = chunks.source_id
         """).fetchall()
-    rows = [row for row in rows
-            if (server == "Все" or row["server"] in ("Все", server))
-            and (organization == "Все организации" or row["organization"] in ("Общее", organization))
-            and (sphere == "Все сферы" or row["sphere"] == sphere)]
+    if mode == "rules":
+        # Общие правила проекта независимы от выбранного сервера.
+        rows = [row for row in rows
+                if row["server"] == "Все"
+                and row["organization"] == "Общее"
+                and row["sphere"] == "Правила проекта"]
+    else:
+        # Серверный режим не подмешивает глобальные правила или материалы другого сервера.
+        rows = [row for row in rows
+                if row["server"] == server
+                and row["sphere"] in SERVER_CATEGORIES
+                and (organization == "Все организации" or row["organization"] in ("Общее", organization))
+                and (sphere == "Все категории" or row["sphere"] == sphere)]
     scored = []
     for row in rows:
         tokens = tokenize(row["text"])
@@ -193,7 +204,7 @@ def ask_openai(question: str, context: list[str]):
             detail="Не задан YANDEX_FOLDER_ID (ID каталога Yandex Cloud)."
         )
 
-    context_text = "\\n\\n---\\n\\n".join(context) if context else (
+    context_text = "\n\n---\n\n".join(context) if context else (
         "Подходящие фрагменты из добавленных источников не найдены."
     )
     instructions = """
@@ -216,8 +227,8 @@ def ask_openai(question: str, context: list[str]):
             {
                 "role": "user",
                 "content": (
-                    f"Вопрос игрока:\\n{question}\\n\\n"
-                    f"Фрагменты базы знаний:\\n{context_text}"
+                    f"Вопрос игрока:\n{question}\n\n"
+                    f"Фрагменты базы знаний:\n{context_text}"
                 ),
             },
         ],
@@ -265,7 +276,7 @@ def ask_openai(question: str, context: list[str]):
         )
 
     if isinstance(answer, list):
-        answer = "\\n".join(
+        answer = "\n".join(
             block.get("text", "")
             for block in answer
             if isinstance(block, dict) and block.get("type") == "text"
@@ -280,8 +291,8 @@ def ask_openai(question: str, context: list[str]):
 def options():
     with connect() as conn:
         orgs = [r[0] for r in conn.execute("SELECT DISTINCT organization FROM sources ORDER BY organization").fetchall()]
-    return {"servers": SERVERS, "spheres": ["Все сферы"] + SPHERES,
-            "organizations": ["Все организации"] + orgs}
+    return {"servers": SERVERS, "categories": ["Все категории"] + SERVER_CATEGORIES, "spheres": ["Правила проекта"] + SERVER_CATEGORIES,
+            "organizations": ["Все организации"] + orgs, "modes": ["server", "rules"]}
 
 
 @app.get("/health")
@@ -345,12 +356,22 @@ def chat(body: ChatRequest):
     question = body.message.strip()
     if not question:
         raise HTTPException(status_code=400, detail="Вопрос пустой.")
-    context = find_context(question, body.server, body.organization, body.sphere)
+    if body.mode not in ("server", "rules"):
+        raise HTTPException(status_code=400, detail="Неизвестный режим. Используй server или rules.")
+    if body.mode == "rules":
+        context = find_context(question, server="Все", organization="Общее",
+                               sphere="Правила проекта", mode="rules")
+    else:
+        if body.server not in SERVERS:
+            raise HTTPException(status_code=400, detail="Неизвестный сервер.")
+        if body.sphere != "Все категории" and body.sphere not in SERVER_CATEGORIES:
+            raise HTTPException(status_code=400, detail="Неизвестная категория сервера.")
+        context = find_context(question, body.server, body.organization, body.sphere, mode="server")
     answer = ask_openai(question, context)
     return {
         "answer": answer,
         "sources_used": context,
         "model": YANDEX_MODEL,
         "knowledge_matches": len(context),
-        "filters": {"server": body.server, "organization": body.organization, "sphere": body.sphere},
+        "filters": {"mode": body.mode, "server": body.server, "organization": body.organization, "sphere": body.sphere},
     }

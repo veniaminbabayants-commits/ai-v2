@@ -51,12 +51,22 @@
 
       <Border Grid.Row="2" Background="#FF111C24" CornerRadius="10" Padding="8" Margin="0,0,0,8">
         <StackPanel>
-          <TextBlock Text="Сервер" Foreground="{StaticResource TextMuted}" FontSize="10"/>
+          <TextBlock Text="ОТКУДА БРАТЬ ЗНАНИЯ" Foreground="{StaticResource TextMuted}" FontSize="10" Margin="2,0,0,6"/>
+          <UniformGrid Columns="2" Margin="0,0,0,8">
+            <Button Content="Выбрать сервер" Click="ServerMode_Click" Margin="0,0,4,0"
+                    Background="#FF1D806F" Foreground="White" BorderThickness="0" Padding="8,7"/>
+            <Button Content="Правила проекта" Click="RulesMode_Click" Margin="4,0,0,0"
+                    Background="#FF202A33" Foreground="White" BorderThickness="0" Padding="8,7"/>
+          </UniformGrid>
+          <TextBlock x:Name="ModeStatus" Text="Режим: выбранный сервер" Foreground="#FF83E3C9" FontSize="10" Margin="2,0,0,8"/>
+          <TextBlock x:Name="ServerLabel" Text="Сервер" Foreground="{StaticResource TextMuted}" FontSize="10"/>
           <ComboBox x:Name="ServerBox" SelectedIndex="0" Margin="0,2,0,6"/>
-          <TextBlock Text="Организация" Foreground="{StaticResource TextMuted}" FontSize="10"/>
+          <TextBlock x:Name="OrganizationLabel" Text="Организация" Foreground="{StaticResource TextMuted}" FontSize="10"/>
           <ComboBox x:Name="OrganizationBox" SelectedIndex="0" Margin="0,2,0,6"/>
-          <TextBlock Text="Сфера" Foreground="{StaticResource TextMuted}" FontSize="10"/>
+          <TextBlock x:Name="SphereLabel" Text="Категория сервера" Foreground="{StaticResource TextMuted}" FontSize="10"/>
           <ComboBox x:Name="SphereBox" SelectedIndex="0" Margin="0,2,0,0"/>
+          <TextBlock x:Name="RulesHint" Text="Этот раздел не зависит от выбранного сервера и использует только общие правила проекта."
+                     Foreground="{StaticResource TextMuted}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
         </StackPanel>
       </Border>
 
